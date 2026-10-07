@@ -172,6 +172,7 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
 # ── Tool 3: create_fit_card ───────────────────────────────────────────────────
 
 def create_fit_card(outfit: str, new_item: dict) -> str:
+
     """
     Write a short caption someone would actually post about the find.
 
@@ -206,4 +207,26 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
         python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('jeans and white sneakers', load_listings()[0]))"
     """
     # TODO: replace this with your implementation
-    return ""
+    if not outfit.strip():
+        return "There isn't enough outfit information to create a fit card."
+
+    prompt = f"""
+Write a short, 2-4 sentence social media caption about this outfit.
+
+New item:
+{new_item["title"]}
+
+Price:
+${new_item["price"]}
+
+Platform:
+{new_item["platform"]}
+
+Outfit:
+{outfit}
+
+Mention the item and its price and platform once each.
+Be specific about the vibe and make it sound like a real post, not a product description.
+"""
+
+    return generate(prompt)
