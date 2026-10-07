@@ -60,23 +60,40 @@
 ### `search_listings`
 
 - **What it does:**
-- **Inputs:** <!-- name and type each: `max_price` (float), not "a price" -->
+- Search the listings data for items matching a description, and optionally a
+  size and a price ceiling.
+- **Inputs:**
+- "description" (str)
+- "size" (str)
+- "max_price" (float) <!-- name and type each: `max_price` (float), not "a price" -->
 - **Returns:**
+- A list of dictionaries. Each listing contain field such as    "title",  "price", "Size", and "platform" 
 - **When it has nothing:**
+- Return a empty list "[]"
 
 ### `suggest_outfit`
 
 - **What it does:**
+- Takes a new clothing item and the user's wardrobe and suggests outfits that combine them.
 - **Inputs:**
+- "new_item" (dict)
+- "wardrobe" (list)
 - **Returns:**
+- A list of outfit ideas describing how to style the new item with items from the wardrobe.
 - **When it has nothing:**
+- Returns general outfit advice using the new item when the wardrobe is empty.
 
 ### `create_fit_card`
 
 - **What it does:**
+- Creates a short, social-media-style caption for an outfit featuring the new item.
 - **Inputs:**
+- `outfit` (dict)
+- `new_item` (dict)
 - **Returns:**
+- A short caption describing the outfit and new item that someone could post.
 - **When it has nothing:**
+- Returns a short message explaining that there is not enough outfit information to create a fit card.
 
 ---
 
@@ -94,13 +111,14 @@
      function have to be real. -->
 
 **Branch rule:**
-
+If search_listings returns an empty list, put a message in the session
+and stop. Otherwise take the first result and go to suggest_outfit.
 **Where it lives:** `agent.py::run_agent`
 
 **How the query is parsed:** <!-- regex, string splitting, or asking the model — say which -->
-
+The user's query is parsed into the description, size, and maximum price needed by `search_listings`.
 **What moves through the session:** <!-- which fields, in what order -->
-
+The search results are stored in the session. If results are found, the first listing is stored as the selected item and passed to `suggest_outfit`. The outfit returned by `suggest_outfit` is then passed to `create_fit_card`.
 ---
 
 ## Sample Run
