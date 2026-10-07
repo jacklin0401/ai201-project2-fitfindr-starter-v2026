@@ -53,13 +53,13 @@ Given a query that matches no listings, the agent stops before calling
      look like state failure — it looks like a tool problem. Something that
      compares session["selected_item"] against what actually reached
      suggest_outfit is the shape you're after. -->
+Given a query that matches a listing, the item passed to `suggest_outfit` is the same listing selected from the results of `search_listings`. This ensures the agent carries the correct item through the session instead of using a different or newly entered item.
 
 
 
 **Why this target:**
 
-
-
+The selected item should consistently flow through the planning loop because maintaining state between tools is a required part of the project. Keeping the previous result in the session also gives the next tool more context about what the user wants. 5 out of 5 successful run
 ---
 
 ## 4. Something about the fit card
@@ -75,12 +75,11 @@ Given a query that matches no listings, the agent stops before calling
      sentence? A card longer than a caption anyone would post? Any of those can
      be turned into a number. -->
 
-
+Given a successful outfit suggestion, create_fit_card returns a short caption that describes the outfit and mentions the item's price. 4 out of 5
 
 **Why this target:**
 
-
-
+The model-generated caption can vary, but it should consistently provide a usable fit card that describes the outfit and includes important information such as the price.
 ---
 
 ## 5. Your choice
@@ -92,11 +91,11 @@ Given a query that matches no listings, the agent stops before calling
      search respects a price ceiling — anything, as long as it names a number
      or an observable outcome. -->
 
-
+Given a query that matches no listings, the agent stops after search_listings and gives the user a useful message explaining that no items were found. 5 out of 5
 
 **Why this target:**
 
-
+The empty-search branch should reliably prevent unnecessary tool calls and clearly tell the user what happened.
 
 ---
 
