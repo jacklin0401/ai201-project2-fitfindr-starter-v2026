@@ -107,8 +107,61 @@ def run_agent(query: str, wardrobe: dict) -> dict:
     """
     session = new_session(query, wardrobe)
 
-    # TODO: delete these two lines and build the loop.
-    session["error"] = "The planning loop isn't built yet — see the TODO in agent.py."
+    import re
+
+    text = query.lower()
+
+    price_match = re.search(r"under\s+\$(\d+(?:\.\d+)?)", text)
+    max_price = float(price_match.group(1)) if price_match else None
+
+    size_match = re.search(r"\bsize\s+([a-z0-9/]+)", text)
+    size = size_match.group(1) if size_match else None
+
+    description = text
+
+    if price_match:
+        description = description.replace(price_match.group(0), "")
+
+    if size_match:
+        description = description.replace(size_match.group(0), "")
+
+    description = description.strip()
+
+    session["parsed"] = {
+        "description": description,
+        "size": size,
+        "max_price": max_price,
+    }
+
+    results = search_listings(
+        description=session["parsed"]["description"],
+        size=session["parsed"]["size"],
+        max_price=session["parsed"]["max_price"],
+    )
+
+    session["search_results"] = results
+
+    if not results:
+        session["error"] = (
+            "No matching listings were found. Try changing the description, "
+            "size, or maximum price."
+        )
+        return session
+
+    session["selected_item"] = results[0]
+
+    # Suggest an outfit using the selected item and wardrobe.
+    session["outfit_suggestion"] = suggest_outfit(
+        new_item=session["selected_item"],
+        wardrobe=session["wardrobe"],
+    )
+
+    # Create the final fit card.
+    session["fit_card"] = create_fit_card(
+        outfit=session["outfit_suggestion"],
+        new_item=session["selected_item"],
+    )
+
     return session
 
 
