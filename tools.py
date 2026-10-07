@@ -142,7 +142,31 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
         python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
     """
     # TODO: replace this with your implementation
-    return ""
+    if not wardrobe["items"]:
+        prompt = f"""
+    Give general styling advice for this clothing item:
+
+    {new_item}
+    """
+        return generate(prompt) 
+    wardrobe_items = "\n".join(
+        f"- {item['name']}: {item['category']}, {', '.join(item['colors'])}"
+        for item in wardrobe["items"]
+    )
+
+    prompt = f"""
+    Suggest one or two outfits using this new item and the user's wardrobe.
+
+    New item:
+    {new_item}
+
+    Wardrobe:
+    {wardrobe_items}
+
+    Name the wardrobe pieces you use in each outfit.
+    """
+
+    return generate(prompt)
 
 
 # ── Tool 3: create_fit_card ───────────────────────────────────────────────────
