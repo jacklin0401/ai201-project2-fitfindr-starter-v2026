@@ -131,9 +131,13 @@ The search results are stored in the session. If results are found, the first li
 **One full query**
 
 ```
-$ python app.py ask '...'
+$ python app.py
 
 ```
+=== A query the data can match === 
+found: Y2K Baby Tee — Butterfly Print — $18.0 on depop outfit: [outfit suggestions generated from the user's wardrobe] fit card: [fit card caption mentioning the item, $18.00 price, and Depop] 
+=== A query it can't === 
+stopped: No matching listings were found. Try changing the description, size, or maximum price. fit_card is None — it should still be None here
 
 **The three tools, tested one at a time**
 
@@ -141,17 +145,15 @@ $ python app.py ask '...'
 $ python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
 
 ```
-
+This returned matching graphic tee listings.
 ```
-$ python -c "from tools import suggest_outfit; ..."
-
+$ python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe; from tools import search_listings; item=search_listings('graphic tee', max_price=30)[0]; print(suggest_outfit(item, get_example_wardrobe()))"
 ```
-
+This returned outfit suggestions using the selected item and wardrobe pieces.
 ```
-$ python -c "from tools import create_fit_card; ..."
-
+$ python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('jeans and white sneakers', load_listings()[0]))"
 ```
-
+This returned a short social-media-style fit card containing the item, price, platform, and outfit vibe.
 ---
 
 ## How I Used AI
@@ -160,8 +162,14 @@ $ python -c "from tools import create_fit_card; ..."
 
      "I used Claude to help me code" is not enough.
 
+     
+
      "I gave Claude my search_listings spec. It returned None on no match
      instead of an empty list, so I changed it" is the level we want. -->
+
+     1. Building the search tool: I used AI to help me work through the search_listings requirements, especially filtering by size and maximum price and returning an empty list when there were no matches. I then tested it with a normal query and an impossible query to verify both cases.
+
+     2. Building the planning loop: I used AI to work through agent.py one step at a time. When my first version reached results[0] for an empty search, it produced an IndexError. I used the error to identify that the empty-result branch needed to return the session before selecting the first item. After fixing it, the no-match query stopped correctly and fit_card remained None.
 
 **Moment 1**
 
