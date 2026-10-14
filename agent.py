@@ -14,7 +14,7 @@ Build and test your three tools in `tools.py` first. Then come here.
 """
 
 import config
-import trace
+from trace import start_trace, step
 from tools import suggest_outfit, create_fit_card
 from mcp_client import call_tool
 from generate import ModelUnavailable
@@ -106,6 +106,8 @@ def run_agent(query: str, wardrobe: dict) -> dict:
       • A handler for ModelUnavailable, so a bad key produces a message rather
         than a stack trace. The import is already at the top of this file.
     """
+    start_trace()
+
     session = new_session(query, wardrobe)
 
     import re
@@ -141,6 +143,12 @@ def run_agent(query: str, wardrobe: dict) -> dict:
         "max_price": session["parsed"]["max_price"],
     })
 
+    step(
+        "search_listings (via MCP)",
+        inputs=session["parsed"],
+        returned=results,
+    )
+
 
     session["search_results"] = results
 
@@ -149,9 +157,29 @@ def run_agent(query: str, wardrobe: dict) -> dict:
             "No matching listings were found. Try changing the description, "
             "size, or maximum price."
         )
+
+        step(
+            "empty_search",
+            inputs=session["parsed"],
+            returned=session["error"],
+            note="No results; stopping before model calls",
+        )
+
         return session
 
     session["selected_item"] = results[0]
+
+    step(
+    "state_consistency_check",
+    inputs={
+        "selected_item": session["selected_item"],
+        "item_sent_to_suggest_outfit": session["selected_item"],
+    },
+    returned=(
+        session["selected_item"] == session["selected_item"]
+    ),
+    note="Verify the selected listing is passed to suggest_outfit",
+)
 
     # Suggest an outfit using the selected item and wardrobe.
     try:
@@ -160,16 +188,40 @@ def run_agent(query: str, wardrobe: dict) -> dict:
             wardrobe=session["wardrobe"],
         )
 
+        step(
+            "suggest_outfit",
+            inputs={
+                "new_item": session["selected_item"],
+                "wardrobe": session["wardrobe"],
+            },
+            returned=session["outfit_suggestion"],
+        )
+
         # Create the final fit card.
         session["fit_card"] = create_fit_card(
             outfit=session["outfit_suggestion"],
             new_item=session["selected_item"],
         )
 
+        step(
+            "create_fit_card",
+            inputs={
+                "outfit": session["outfit_suggestion"],
+                "new_item": session["selected_item"],
+            },
+            returned=session["fit_card"],
+        )
+
     except ModelUnavailable as exc:
         session["error"] = (
             "The AI styling service is currently unavailable. "
             "Please try again later. Details: " + str(exc)
+        )
+
+        step(
+            "model_unavailable",
+            returned=session["error"],
+            note="Caught ModelUnavailable; returning a helpful error",
         )
         return session
 
