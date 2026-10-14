@@ -154,16 +154,24 @@ def run_agent(query: str, wardrobe: dict) -> dict:
     session["selected_item"] = results[0]
 
     # Suggest an outfit using the selected item and wardrobe.
-    session["outfit_suggestion"] = suggest_outfit(
-        new_item=session["selected_item"],
-        wardrobe=session["wardrobe"],
-    )
+    try:
+        session["outfit_suggestion"] = suggest_outfit(
+            new_item=session["selected_item"],
+            wardrobe=session["wardrobe"],
+        )
 
-    # Create the final fit card.
-    session["fit_card"] = create_fit_card(
-        outfit=session["outfit_suggestion"],
-        new_item=session["selected_item"],
-    )
+        # Create the final fit card.
+        session["fit_card"] = create_fit_card(
+            outfit=session["outfit_suggestion"],
+            new_item=session["selected_item"],
+        )
+
+    except ModelUnavailable as exc:
+        session["error"] = (
+            "The AI styling service is currently unavailable. "
+            "Please try again later. Details: " + str(exc)
+        )
+        return session
 
     return session
 
